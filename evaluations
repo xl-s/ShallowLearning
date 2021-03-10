@@ -1,0 +1,9 @@
+### Model Comparisons
+
+*Models trained using 5 epochs*
+
+| Model | Class | Test Accuracy | Test Loss |
+|:---:|:---:|:---:|:---:|
+|Baseline|Infected/Non-Infected|71.382%|0.83756|
+|Baseline + Batch Normalisation|Infected/Non-Infected|67.154%|1.44243|
+|Baseline + BN only on CNN layers|Infected/Non-Infected|71.707%|1.16756|
