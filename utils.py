@@ -1,7 +1,8 @@
 import os
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision.datasets import ImageFolder
 from enum import Enum
+import numpy as np
 
 
 class ImageSubfolder(ImageFolder):
@@ -34,17 +35,18 @@ class ClassType(Enum):
 	NORMAL_INFECTED = 1
 	COVID_NONCOVID = 2
 
-def _load_data(loc="dataset", kind="train", suf=None, sub=False, transform=None, **kwargs):
+def _load_data(loc="dataset", kind="train", suf=None, sub=False, prop=None, transform=None, **kwargs):
 	base = f"{loc}/{kind}{'' if not suf else '/' + suf}"
 	dataset = ImageSubfolder(base, transform=transform) if sub else ImageFolder(base, transform=transform)
+	if prop: dataset = Subset(dataset, np.random.choice(len(dataset), round(prop * len(dataset)), replace=False))
 	return DataLoader(dataset, **kwargs)
 
-def load_data(loc="dataset", kind="train", class_type=ClassType.THREE_CLASS, transform=None, **kwargs):
+def load_data(loc="dataset", kind="train", class_type=ClassType.THREE_CLASS, transform=None, prop=None, **kwargs):
 	if class_type == ClassType.THREE_CLASS:
-		return _load_data(loc=loc, kind=kind, sub=True, transform=transform, **kwargs)
+		return _load_data(loc=loc, kind=kind, sub=True, transform=transform, prop=prop, **kwargs)
 	elif class_type == ClassType.NORMAL_INFECTED:
-		return _load_data(loc=loc, kind=kind, sub=False, transform=transform, **kwargs) 
+		return _load_data(loc=loc, kind=kind, sub=False, transform=transform, prop=prop, **kwargs) 
 	elif class_type == ClassType.COVID_NONCOVID:
-		return _load_data(loc=loc, kind=kind, sub=False, suf="infected", transform=transform, **kwargs)
+		return _load_data(loc=loc, kind=kind, sub=False, suf="infected", transform=transform, prop=prop, **kwargs)
 	else:
 		raise ValueError("Invalid class_type")
