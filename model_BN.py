@@ -18,10 +18,13 @@ class CNN(nn.Module):
 			nn.BatchNorm2d(10),
 			nn.Conv2d(10, 15, 5),
 			nn.BatchNorm2d(15),
+			nn.Conv2d(15, 20, 5),
+			nn.BatchNorm2d(20),
 			nn.MaxPool2d(5),
 			nn.Flatten(),
 			nn.LeakyReLU(),
-			nn.Linear(15 * 27 * 27, 4096),
+			nn.Linear(13520, 4096),
+			nn.Dropout(0.25),
 			# nn.BatchNorm1d(4096),
 			nn.LeakyReLU(),
 			nn.Linear(4096, 512),
@@ -142,6 +145,7 @@ def run(N_EPOCH, L_RATE, W_DECAY, class_type, load=None, save=None):
 	model = load_model(load, device)
 	optimizer = optim.Adam(model.parameters(), lr=L_RATE, weight_decay=W_DECAY)
 
+	print(model)
 	progress = []
 	for epoch in range(N_EPOCH):
 		te_loss, te_acc = test(model, device, test_loader)
