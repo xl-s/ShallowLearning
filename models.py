@@ -80,7 +80,7 @@ class Classifier(nn.Module):
 		for ind in range(len(layers) - 1):
 			append(layers[ind], layers[ind + 1])
 		self.layers = nn.Sequential(
-			*modules, nn.Linear(layers[-1] if layers else in_features, 2)
+			*modules, nn.Linear(layers[-1] if layers else in_features, out_features)
 		)
 
 	def forward(self, x):
@@ -153,15 +153,20 @@ def ensemble_for(class_type):
 	if class_type == "inf":
 		return Ensemble(
 			params=[{"conv": [5, 10, 15], "kernel_size": 5}],
-			files=[[f"inf-c3k5-{ind+1}.model" for ind in range(10)]],
+			files=[[f"inf-{ind+1}.model" for ind in range(10)]],
 		)
 	elif class_type == "cov":
 		return Ensemble(
 			params=[{"conv": [5, 10, 15], "kernel_size": 7}],
-			files=[[f"cov-c3k7-{ind+1}.model" for ind in range(10)]],
+			files=[[f"cov-{ind+1}.model" for ind in range(10)]],
+		)
+	elif class_type == "all":
+		return Ensemble(
+			params=[{"conv": [5, 10, 15], "out_features": 3, "kernel_size": 7}],
+			files=[[f"all-{ind+1}.model" for ind in range(5)]]
 		)
 	else:
-		raise ValueError("class_type must be one of 'cov' or 'inf'")
+		raise ValueError("class_type must be one of 'cov', 'inf', or 'all'")
 
 
 class Assembly(nn.Module):
@@ -192,7 +197,7 @@ class Assembly(nn.Module):
 			inf predicts normal if it is with low probability and
 			either 'covid' or 'non-covid' has a strong probability.
 		2.	return norm = 1, rest = 0 if softmax(inf(x, norm)) > 0.5
-			otherwise, just use the prediction of cov(x).
+			otherwise, just use the binary prediction of cov(x).
 		"""
 		if self.pred_mode.lower() == "prob":
 			inf_out = softmax(self.inf(x), dim=1)
@@ -201,8 +206,8 @@ class Assembly(nn.Module):
 			inf_out = collapse_max(self.inf(x))
 			cov_out = collapse_max(self.cov(x))
 		else:
-			raise ValueError("pred_mode must be one of 'prob' or 'tree")
-		
+			raise ValueError("pred_mode must be one of 'prob' or 'tree'")
+
 		inf_prob, norm_prob = (
 			inf_out[:, self.labels["inf"]["infected"]],
 			inf_out[:, self.labels["inf"]["normal"]],

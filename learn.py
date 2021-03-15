@@ -209,7 +209,7 @@ def run(
 
 	model = load_model(arch, load, device)
 	if N_EPOCH:
-		optimizer = optim.Adam(model.parameters(), lr=L_RATE, weight_decay=W_DECAY)
+		optimizer = optim.AdamW(model.parameters(), lr=L_RATE, weight_decay=W_DECAY)
 	if use_scheduler:
 		scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5)
 
