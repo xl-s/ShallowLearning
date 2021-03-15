@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 from datetime import datetime
 from transforms import aug_transform, clean_transform
+import matplotlib.pyplot as plt
 
 
 class Conv2dPad(nn.Conv2d):
@@ -190,35 +191,38 @@ def run(N_EPOCH, L_RATE, W_DECAY, class_type, load=None, save=None):
     print(model)
     progress = []
     for epoch in range(N_EPOCH):
-        te_loss, te_acc = test(model, device, val_loader)
+        val_loss, val_acc = test(model, device, val_loader)
         print(f"--- Beginning Epoch {epoch + 1}/{N_EPOCH} @ {str(datetime.now())}")
         tr_loss, tr_acc = train(model, device, train_loader, optimizer)
         print(f"--- Completed Epoch {epoch + 1}/{N_EPOCH} @ {str(datetime.now())}")
         print(f"Train Loss: {round(tr_loss, 5)}")
-        progress.append((te_loss, te_acc, tr_loss, tr_acc))
+        progress.append((val_loss, val_acc, tr_loss, tr_acc))
         scheduler.step()
         scheduler.get_last_lr()
 
-    test(model, device, test_loader)
+    test_loss, test_accuracy = test(model, device, test_loader)
 
     if save: torch.save(model.state_dict(), save)
-    return progress
+    return progress, test_loss, test_accuracy
 
 
 if __name__ == "__main__":
     # Example:
-    run(10, 1e-3, 0.1, ClassType.NORMAL_INFECTED, save="infected-covid-res02-adamW.model")
+    lr_grid = [1e-3, 1e-4, 1e-5, 1e-6]
+    tr_losses = []
+    test_losses = []
+    test_accuracies = []
+    for lr in lr_grid:
+        progress, test_loss, test_accuracy = run(10, lr, 0.1, ClassType.NORMAL_INFECTED, save="infected-covid-res02-adamW.model")
+        tr_losses.append(progress[-1][2])
+        test_losses.append(test_loss)
+        test_accuracies.append(test_accuracy)
 
-"""
-Architecture type: two binary classifiers.
-We expect two specific classifiers to give a better performance than a
-single three-class model since they may be better fitted to each of their problems.
+    plt.plot(lr_grid, tr_losses, label="training loss")
+    plt.plot(lr_grid, test_losses, label="test loss")
+    plt.plot(lr_grid, test_accuracies, label="test accuracy")
+    plt.xlabel("LR")
+    plt.show()
 
-Being a medical identification problem, we prefer models which have more false positives.
+    # run(10, 1e-3, 0.1, ClassType.COVID_NONCOVID, save="covid_noncovid.model")
 
-Layers to try:
-- BatchNorm
-- DropOut
-- Inception
-- Residual Connections
-"""

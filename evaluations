@@ -32,7 +32,10 @@
 | 2x CNN + BN, 3x Dropout (adamW) |![Res_12](model_structures/Res_12.PNG)|74.634%|0.51357|
 
 
-
+## Covid vs Non-Covid 
+| Resblock | Structure |Test Accuracy | Test Loss |
+|:---:|:---:|:---:|:---:|
+| 2x CNN + BN, 3x Dropout (adamW) |-|63.78%|0.59877|
 
 
 
