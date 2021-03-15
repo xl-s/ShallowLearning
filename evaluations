@@ -30,6 +30,9 @@
 | 4x CNN + BN, 3x Dropout (more activations) |![Res_10](model_structures/Res_10.PNG)|72.196%|0.79538|
 | 4x CNN + BN, 3x Dropout (less activations, AvgPool) |![Res_11](model_structures/Res_11.PNG)|66.179%|1.54994|
 | 2x CNN + BN, 3x Dropout (adamW) |![Res_12](model_structures/Res_12.PNG)|74.634%|0.51357|
+| 2x CNN + BN, 3x Dropout (adamW) |+ cross-entropy loss weights|74.959%|1.12329|
+
+
 
 
 ## Covid vs Non-Covid 

@@ -94,7 +94,7 @@ def train(model, device, train_loader, optimizer):
 	Returns (average loss per batch, accuracy).
 	"""
     model.train()
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = nn.CrossEntropyLoss(weight=torch.Tensor([0.673, 1.945]).cuda())
     loss_sum = 0
     correct = 0
     for data, target in tqdm(train_loader):
@@ -120,7 +120,7 @@ def test(model, device, test_loader, plot=False):
     model.eval()
 
     correct = 0
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = nn.CrossEntropyLoss(weight=torch.Tensor([0.673, 1.945]).cuda())
     loss_sum = 0
     # displaySet = False
     # display = np.zeros([24, 150, 150])
@@ -208,21 +208,22 @@ def run(N_EPOCH, L_RATE, W_DECAY, class_type, load=None, save=None):
 
 if __name__ == "__main__":
     # Example:
-    lr_grid = [1e-3, 1e-4, 1e-5, 1e-6]
+    # lr_grid = [1e-3, 1e-4, 1e-5, 1e-6]
+    lr_grid = [1e-4]
     tr_losses = []
     test_losses = []
     test_accuracies = []
     for lr in lr_grid:
-        progress, test_loss, test_accuracy = run(10, lr, 0.1, ClassType.NORMAL_INFECTED, save="infected-covid-res02-adamW.model")
+        progress, test_loss, test_accuracy = run(5, lr, 0.1, ClassType.NORMAL_INFECTED, save="infected-covid-res02-adamW.model")
         tr_losses.append(progress[-1][2])
         test_losses.append(test_loss)
         test_accuracies.append(test_accuracy)
 
-    plt.plot(lr_grid, tr_losses, label="training loss")
-    plt.plot(lr_grid, test_losses, label="test loss")
-    plt.plot(lr_grid, test_accuracies, label="test accuracy")
-    plt.xlabel("LR")
-    plt.show()
+    # plt.plot(lr_grid, tr_losses, label="training loss")
+    # plt.plot(lr_grid, test_losses, label="test loss")
+    # plt.plot(lr_grid, test_accuracies, label="test accuracy")
+    # plt.xlabel("LR")
+    # plt.show()
 
     # run(10, 1e-3, 0.1, ClassType.COVID_NONCOVID, save="covid_noncovid.model")
 
