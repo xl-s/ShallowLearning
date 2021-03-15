@@ -23,11 +23,14 @@
 | 2x CNN + BN (more activations)|![Res_03](model_structures/Res_03.PNG)|77.073%|0.71202|
 | 3x CNN + BN (more activations) |![Res_04](model_structures/Res_04.PNG)|68.455%|1.18795|
 | 3x CNN + BN (increasing ksize)|![Res_05](model_structures/Res_05.PNG)|80.163%|0.56455|
-| 3x CNN + BN (increasing ksize, more feaures|![Res_06](model_structures/Res_06.PNG)|71.545%|0.87788|
+| 3x CNN + BN (increasing ksize, more features|![Res_06](model_structures/Res_06.PNG)|71.545%|0.87788|
 | 3x CNN + BN (increasing ksize, Dropout|![Res_07](model_structures/Res_07.PNG)|73.496%|0.8689|
 | 4x CNN + BN, Dropout|![Res_08](model_structures/Res_08.PNG)|74.309%|0.77802|
 | 4x CNN + BN, 3x Dropout|![Res_09](model_structures/Res_09.PNG)|67.967%|1.1026|
 | 4x CNN + BN, 3x Dropout (more activations) |![Res_10](model_structures/Res_10.PNG)|72.196%|0.79538|
+| 4x CNN + BN, 3x Dropout (less activations, AvgPool) |![Res_11](model_structures/Res_11.PNG)|66.179%|1.54994|
+| 2x CNN + BN, 3x Dropout (adamW) |![Res_12](model_structures/Res_12.PNG)|74.634%|0.51357|
+
 
 
 
