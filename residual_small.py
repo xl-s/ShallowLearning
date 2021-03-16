@@ -214,7 +214,7 @@ if __name__ == "__main__":
     test_losses = []
     test_accuracies = []
     for lr in lr_grid:
-        progress, test_loss, test_accuracy = run(5, lr, 0.1, ClassType.NORMAL_INFECTED, save="infected-covid-res02-adamW.model")
+        progress, test_loss, test_accuracy = run(5, lr, 0.1, ClassType.NORMAL_INFECTED, save="base(82-438).model")
         tr_losses.append(progress[-1][2])
         test_losses.append(test_loss)
         test_accuracies.append(test_accuracy)

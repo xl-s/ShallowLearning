@@ -96,12 +96,13 @@ than expected and could be attributed to the unbalanced dataset.
 
 ### 2.2 Model Design
 The team primarily used convolutional layers in our model design, which is the most appropriate for an image-classification task. 
+![model desgin](model_structures/model_design.PNG)
 
 #### 2.3 Number of Layers 
 #### 2.4 Number of features
 #### 2.5 Mini-batch size 
 #### 2.6 Loss function 
- 
+
 
 -[ ] Explain choice of optimiser and its parameters
 -[ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
