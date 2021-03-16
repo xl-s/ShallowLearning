@@ -36,7 +36,6 @@ with a higher proportion of samples being infected-Covid samples.
 ![dataset_split](model_structures/datasetsplit.png)
 
 ### 1.2 Data Processing
-#### 1.2.1 Data Processing methods
 1. **Normalisation.** Used to standardise input features to ensure better and faster convergence of the model. 
 
 2. **Grayscale.** X-ray images are naturally quite monochrome to the human eye. However, the input images are saved "in colour" - 
@@ -61,14 +60,51 @@ this is a quick method of generation more training samples within reasonable exp
 
 
 ## 2. Classifier 
--[ ] Discuss difference between the two architectures above and defend which one we chose and why 
+-[x] Discuss difference between the two architectures above and defend which one we chose and why 
 -[ ] Discuss reasons behind this choice of model structure (types of layers, # of params)
 -[ ] Discuss value for mini-batch size 
 -[ ] Explain choice of loss function and its parameters (if any)
--[ ] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and beenfits for model 
+-[ ] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
+
+### 2.1 Choice of Architecture
+
+#### 2.1.1 Difference in architecture
+The 2-part binary architecture contains 2 sequential classifiers. The first classifier discriminates normal samples 
+against infected samples whereas the second classifier only takes into account "infected" samples and discriminates
+against covid and non-covid samples within those found to be infected. 
+
+In contrast, a single tri-class classifier completes the task in one step, distinguishing the 3 classes at the same time. 
+ 
+#### 2.1.2 Hypothesis 
+The team hypothesised that a 2-part binary architecture would be more suitable for the problem. We theorised that 
+classification task of (1) Normal vs Infected and; (2) Covid vs Non-Covid is quite different. The model will probably have to
+consider different sets of structures for task (1) and (2). For example, the model might be concerned with finer details 
+in the radiograph in task (2) while considering larger structures for task (1). 
+
+To this end, we chose to work with a 2-part binary architecture.
+
+#### 2.1.3 Architecture Evaluation
+Experiments using both architectures were carried out and our hypothesis was confirmed. Results are shown in the table below. 
+
+|Architecture|Training Accuracy|Test Accuracy|
+|:---:|:---:|:---:|
+|2-part binary classifier|xx|xx|
+|tri-class classifier|xx|xx|
+
+Generally, the 2-part binary classifier gave better results. However, its improvement over the tri-class classifier was less
+than expected and could be attributed to the unbalanced dataset. 
+
+### 2.2 Model Design
+The team primarily used convolutional layers in our model design, which is the most appropriate for an image-classification task. 
+
+#### 2.3 Number of Layers 
+#### 2.4 Number of features
+#### 2.5 Mini-batch size 
+#### 2.6 Loss function 
+ 
 
 -[ ] Explain choice of optimiser and its parameters
--[ ] (bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
+-[ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
 -[ ] Explain choice of initialisation of model parameters
 -[ ] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
 
