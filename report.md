@@ -62,7 +62,7 @@ this is a quick method of generation more training samples within reasonable exp
 ## 2. Classifier 
 -[x] Discuss difference between the two architectures above and defend which one we chose and why 
 -[ ] Discuss reasons behind this choice of model structure (types of layers, # of params)
--[ ] Discuss value for mini-batch size 
+-[x] Discuss value for mini-batch size 
 -[x] Explain choice of loss function and its parameters (if any)
 -[x] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
 
@@ -104,7 +104,18 @@ The team primarily used convolutional layers in our model design, which is the m
 
 #### 2.2.1 Number of Layers 
 #### 2.2.2 Number of features
+
 #### 2.2.3 Mini-batch size 
+Theoretically, a smaller batch size might compute faster. However, as the model contains batchnorm layers, it is not 
+ideal to have small batch sizes as the normalisation will not be stable. Based on conventions, a 32 or 4 batch size is 
+normally used. We recorded the time taken for each batch size to complete 1 epoch:
+
+|Batch size|Time Taken (s)|
+|:---:|:---:|
+|32|10.22|
+|64|11.03|
+
+Thus, we chose a batch size of 32 in the end. 
 
 #### 2.2.4 Loss function 
 The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used as this is a classification problem. As the dataset is biased,
@@ -146,7 +157,8 @@ was averaged to obtain the final performance of the model for that hyperparamete
 |Graph of Performance against Log(WD)|![tune_LR_1](tuning_norm/test_wtdecay.png)|![tune_LR_2](tuning_inf/test_wtdecay.png)|
 |Optimal WD|5e-3|5e-3|
 
-
+### 2.4 Final Model / Architecture (?)  
+describe the ensemble method here?
 
 
 ## 3. Results 
@@ -155,7 +167,7 @@ was averaged to obtain the final performance of the model for that hyperparamete
 -[ ] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why?
 -[ ] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
 -[ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
--[ ] Features 
+-[ ] Feature maps
 
 
 
