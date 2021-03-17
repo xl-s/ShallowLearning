@@ -63,11 +63,15 @@ this is a quick method of generation more training samples within reasonable exp
 -[x] Discuss difference between the two architectures above and defend which one we chose and why 
 -[ ] Discuss reasons behind this choice of model structure (types of layers, # of params)
 -[ ] Discuss value for mini-batch size 
--[ ] Explain choice of loss function and its parameters (if any)
--[ ] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
+-[x] Explain choice of loss function and its parameters (if any)
+-[x] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
+
+-[x] Explain choice of optimiser and its parameters
+-[ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
+-[ ] Explain choice of initialisation of model parameters
+-[ ] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
 
 ### 2.1 Choice of Architecture
-
 #### 2.1.1 Difference in architecture
 The 2-part binary architecture contains 2 sequential classifiers. The first classifier discriminates normal samples 
 against infected samples whereas the second classifier only takes into account "infected" samples and discriminates
@@ -98,16 +102,52 @@ than expected and could be attributed to the unbalanced dataset.
 The team primarily used convolutional layers in our model design, which is the most appropriate for an image-classification task. 
 ![model desgin](model_structures/model_design.PNG)
 
-#### 2.3 Number of Layers 
-#### 2.4 Number of features
-#### 2.5 Mini-batch size 
-#### 2.6 Loss function 
+#### 2.2.1 Number of Layers 
+#### 2.2.2 Number of features
+#### 2.2.3 Mini-batch size 
+
+#### 2.2.4 Loss function 
+The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used as this is a classification problem. As the dataset is biased,
+we used cross-entropy weights as calculated: $$ w_0 = (n_0 + n_1)/(2*n_0) $$, where $$n_0 = # of samples with label 0, and w_0 = weight for class 0$$. 
+
+|infected|normal|
+|:---:|:---:|
+|0.25|0.75|
+
+|covid|non-covid|
+|:---:|:---:|
+|0.65|0.35|
+
+Regularisation was also done on the loss function by using the ```weight_decay``` parameter of the optimiser. The value 
+of weight decay was decided using hyperparameter tuning, further described in Section XX below.  
+
+### 2.3 Choice of Optimiser
+Initially, we used the Adam optimiser as it is the "default" choice in deep learning models. However, we realised that Adam 
+did not generalise over the data well and resulted in overfitting quite quickly.
+
+Reading pyTorch's documentation, we found that ```torch.optim.AdamW``` could alleviate overfitting by implementing a weight decay parameter 
+that penalises the magnitude of weights. 
+
+[need to show graph to prove less overfitting????]
+
+Hyperparameters Learning Rate (LR) and Weight Decay (WD) of the AdamW optimiser was tuned separately for each classifier. This was done by changing the value 
+of the hyperparameter while holding all other factors constant. The model was trained for 8 epochs and the last 4 values of each performance metric 
+was averaged to obtain the final performance of the model for that hyperparameter value. 
+
+#### 2.3.1 Learning Rate (LR)
+| |Normal VS Infected|Covid VS Non-Covid|
+|:---:|:---:|:---:|
+|Graph of Performance against Log(LR)|![tune_LR_1](tuning_norm/test_LR_more.png)|![tune_LR_2](tuning_inf/test_LR.png)|
+|Optimal LR|2.3e-6|1e-5|
+
+#### 2.3.2 Weight Decay (WD)
+| |Normal VS Infected|Covid VS Non-Covid|
+|:---:|:---:|:---:|
+|Graph of Performance against Log(WD)|![tune_LR_1](tuning_norm/test_wtdecay.png)|![tune_LR_2](tuning_inf/test_wtdecay.png)|
+|Optimal WD|5e-3|5e-3|
 
 
--[ ] Explain choice of optimiser and its parameters
--[ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
--[ ] Explain choice of initialisation of model parameters
--[ ] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
+
 
 ## 3. Results 
 -[ ] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 

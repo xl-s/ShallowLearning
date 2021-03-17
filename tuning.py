@@ -148,7 +148,7 @@ def test(model, device, test_loader, loss_wt=None, plot=False):
     specificity = true_negatives/(true_negatives + false_positives)
     f1 = 2*true_positives/(2*true_positives + false_positives + false_negatives)
 
-    print(f"Test Accuracy/Loss: {round(100 * accuracy, 3)}%, {round(loss_sum / len(test_loader), 5)}")
+    # print(f"Test Accuracy/Loss: {round(100 * accuracy, 3)}%, {round(loss_sum / len(test_loader), 5)}")
 
     metrics = {"loss": loss_sum/len(test_loader),
                "accuracy": accuracy,
@@ -216,25 +216,25 @@ def run(N_EPOCH, L_RATE, W_DECAY, class_type, load=None, save=None, loss_wt=None
     all_train_metrics.round(5)
     all_test_metrics = pd.DataFrame(concat_dict(all_test_metrics))
     all_test_metrics.round(5)
-
-    val_metrics = test(model, device, val_loader, loss_wt=loss_wt)
+    # val_metrics = test(model, device, val_loader, loss_wt=loss_wt)
 
     if save:
         torch.save(model.state_dict(), save)
 
-    return all_train_metrics, all_test_metrics, val_metrics
+    return all_train_metrics, all_test_metrics
 
 
-if __name__ == "__main__":
-    lr_grid = [1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
-    loss_wt = [0.1, 0.3, 0.5, 0.7, 0.9]
+def tune():
+    lr_grid = [1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3]
+    loss_wt = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,  0.9]
+    wt_decay = [1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]
 
     all_train = []
     all_test = []
 
-    for wt in loss_wt:
-        print(f"Running loss weight: {wt}")
-        train_metrics, test_metrics, val_metrics = run(8, 5e-6, 0.1, ClassType.NORMAL_INFECTED, save="base.model", loss_wt=wt)
+    for wt in lr_grid:
+        print(f"Running Learning Rate: {wt}")
+        train_metrics, test_metrics = run(8, 1e-5, 5e-3, ClassType.COVID_NONCOVID, save="base.model", loss_wt=0.65)
 
         avg_train = train_metrics.tail(4).mean(axis=0).to_frame().transpose()
         avg_test = test_metrics.tail(4).mean(axis=0).to_frame().transpose()
@@ -248,9 +248,41 @@ if __name__ == "__main__":
     print(all_train)
     print(all_test)
 
-    all_train["Loss Weight"] = loss_wt
-    all_test["Loss Weight"] = loss_wt
+    all_train["Learning Rate"] = lr_grid
+    all_test["Learning Rate"] = lr_grid
 
-    all_train.to_json("train_lossWT_more.json")
-    all_test.to_json("test_lossWT_more.json")
+    all_train.to_json("train_LR.json")
+    all_test.to_json("test_LR.json")
 
+    # all_train["Weight Decay"] = wt_decay
+    # all_test["Weight Decay"] = wt_decay
+    #
+    # all_train.to_json("train_wtdecay.json")
+    # all_test.to_json("test_wtdecay.json")
+
+
+tune()
+
+def plot_epochs(metrics, name):
+    epoch = [1, 2, 3, 4, 5, 6, 7, 8]
+    metrics["epochs"] = epoch
+
+    plt.plot("epochs", "accuracy", data=metrics, color="red")
+    plt.plot("epochs", "loss", data=metrics, color="yellow")
+    plt.plot("epochs", "sensitivity", data=metrics, color="green")
+    plt.plot("epochs", "specificity", data=metrics, color="blue")
+    plt.plot("epochs", "f1-score", data=metrics, color="purple")
+
+    plt.legend()
+    plt.savefig(name)
+    plt.show()
+
+# NORMAL_INFECTED
+# train_metrics, test_metrics = run(8, 2.3e-6, 5e-3, ClassType.NORMAL_INFECTED, save="base.model", loss_wt=0.3)
+
+# train_metrics, test_metrics = run(8, 2.3e-6, 5e-3, ClassType.NORMAL_INFECTED, save="base.model", loss_wt=0.3)
+# train_metrics.to_json("train_woscheduler.json")
+# test_metrics.to_json("test_woscheduler.json")
+#
+# plot_epochs(train_metrics, "train_woscheduler")
+# plot_epochs(test_metrics, "test_woscheduler")
