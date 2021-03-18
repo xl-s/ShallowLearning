@@ -50,7 +50,7 @@ As discussed in Section 1.1, the dataset provided is not balanced. Data augmenta
 
 ## 2. Classifier 
 - [x] Discuss difference between the two architectures above and defend which one we chose and why 
-- [ ] Discuss reasons behind this choice of model structure (types of layers, # of params)
+- [x] Discuss reasons behind this choice of model structure (types of layers, # of params)
 - [x] Discuss value for mini-batch size 
 - [x] Explain choice of loss function and its parameters (if any)
 - [x] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
@@ -58,7 +58,7 @@ As discussed in Section 1.1, the dataset provided is not balanced. Data augmenta
 - [x] Explain choice of optimiser and its parameters
 - [ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
 - [ ] Explain choice of initialisation of model parameters
-- [ ] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
+- [x] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
 
 ### 2.1 Choice of Architecture
 #### 2.1.1 Difference in architecture
@@ -74,21 +74,27 @@ To this end, we chose to work with a 2-part binary architecture.
 #### 2.1.3 Architecture Evaluation
 Experiments using both architectures were carried out and our hypothesis was confirmed. Results are shown in the table below. 
 
-|Architecture|Training Accuracy|Test Accuracy|
-|:---:|:---:|:---:|
-|2-part binary classifier|xx|xx|
-|tri-class classifier|xx|xx|
+|Architecture|Train Set Accuracy|Test Set Accuracy|Validation Set Accuracy|
+|:---:|:---:|:---:|:---:|
+|2-part binary classifier|79.87%|79.19%|72.00%|
+|tri-class classifier|81.58%|71.54%|60.00%|
 
 Generally, the 2-part binary classifier gave better results. However, its improvement over the tri-class classifier was less than expected and could be attributed to the unbalanced dataset. 
 
 ### 2.2 Model Design
 The team primarily used convolutional layers in our model design, which is the most appropriate for an image-classification task. 
+
 ![model desgin](model_structures/model_design.PNG)
 
-#### 2.2.1 Number of Layers 
-#### 2.2.2 Number of features
+We experimented with a variety of model architectures by varying the number of convolutional layers (together with the number of channels) and fully connected layers. We also experimented with the inclusion of batchnorm and dropout layers, as well as residual and inception networks. The basic convolutional model showed the most promising performance with batch normalization, but without dropout layers.
 
-#### 2.2.3 Mini-batch size 
+Generally, we found that all of the models overfitted extremely quickly, which may be primarily attributed to the small size of the dataset. Every model routinely attained 95+% training accuracy within a few epochs, but showed significantly poorer and highly varied performance on the test set. More complex models had accuracies ranging as far as from 60% to 85%, often in consecutive epochs (despite there being little change in training set performance). Training a model beyond two to three epochs did not yield any significant improvement in overall test set accuracy (sometimes resulting in reduced performance as compared to earlier epochs). This phenomenon was observed even with strong regularization applied. A typical learning curve demonstrating this behaviour is shown in the figure below.
+
+![](plots/learning_curve.png)
+
+For this reason, we settled on a relatively basic convolutional model as a baseline model, with three convolutional layers and one fully connected hidden layer. Due to the small dataset, more complex architectures would only add overhead to the model without offering significant improvement in performance.
+
+#### 2.2.1 Mini-batch size 
 Theoretically, a smaller batch size might compute faster. However, as the model contains batchnorm layers, it is not ideal to have small batch sizes as the normalisation will not be stable. Based on conventions, a 32 or 4 batch size is normally used. We recorded the time taken for each batch size to complete 1 epoch:
 
 |Batch size|Time Taken (s)|
@@ -98,7 +104,7 @@ Theoretically, a smaller batch size might compute faster. However, as the model 
 
 Thus, we chose a batch size of 32 in the end. 
 
-#### 2.2.4 Loss function 
+#### 2.2.2 Loss function 
 The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used as this is a classification problem. As the dataset is biased, we used cross-entropy weights as calculated: $ w_0 = (n_0 + n_1)/(2*n_0) $, where $n_0 = $ # of samples with label 0, and $w_0 =$ weight for class 0. 
 
 |infected|normal|
@@ -132,8 +138,31 @@ Hyperparameters Learning Rate (LR) and Weight Decay (WD) of the AdamW optimiser 
 |Graph of Performance against Log(WD)|![tune_LR_1](tuning_norm/test_wtdecay.png)|![tune_LR_2](tuning_inf/test_wtdecay.png)|
 |Optimal WD|5e-3|5e-3|
 
-### 2.4 Final Model / Architecture (?)  
-describe the ensemble method here?
+### 2.4 Final Model Architecture
+To combat the overfitting of the model and improve robustness, we settled on utilizing an ensemble method for our final model architecture. 
+
+We constructed two ensemble models, one to predict on covid/non-covid and another on infected/normal, which was then assembled into a two-part binary classifier.
+
+We also constructed an additional standalone ternary classification ensemble model, to evaluate our hypothesis that a two-part binary classifier would outperform a single ternary classifier.
+
+Each ensemble consists of 10 distinct baseline models with the architecture described in 2.2. At prediction time, the input is run through all 10 models, and the majority output is treated as the prediction.
+
+#### 2.4.1 Model Training and Selection
+
+Each individual baseline model was trained on 75% of the training dataset for 20 epochs, to reduce the overfitting of each model on the training set.
+
+As mentioned in 2.2, each model showed a high variance in test set accuracy between epochs. Besides tracking the model performance, we used the test set to produce model evaluation metrics such that we could select the model which is most generalizable. To this end, we saved the model that performed the best out of all 20 epochs, instead of naively saving the final model after 20 epochs, with the rationale that a model which generalizes well to the test set would also generalize well to all other data, as well as to account for variations in the generalizability of the model throughout the training process.
+
+As this is a medical diagnosis, we factored in sensitivity as a model selection and evaluation metric, under the assumption that it is less costly to produce a false positive prediction than a false negative prediction (seeing as a false negative could potentially result in a pneumonia or covid carrier spreading the disease to others). The final evaluation metric was thus designed to take into account both accuracy and sensitivity, with an additional balancing term to ensure  that neither metric performs too poorly.
+$$
+\text{performance} = \text{Acc.} + \text{Sens.} - |\text{Acc.} - \text{Sens.}|
+$$
+The final training algorithm for an individual baseline model is as follows:
+
+* For 20 epochs:
+  * Perform mini-batch gradient descent using the training set.
+  * Evaluate the model using the aforementioned performance metric.
+    * If it is better than the currently best-performing model, save the model and note it as the new best-performing model.
 
 
 ## 3. Results 
