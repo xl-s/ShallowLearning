@@ -88,7 +88,7 @@ The team primarily used convolutional layers in our model design, which is the m
 
 We experimented with a variety of model architectures by varying the number of convolutional layers (together with the number of channels) and fully connected layers. We also experimented with the inclusion of batchnorm and dropout layers, as well as residual and inception networks. The basic convolutional model showed the most promising performance with batch normalization, but without dropout layers.
 
-Generally, we found that all of the models overfitted extremely quickly, which may be primarily attributed to the small size of the dataset. Every model routinely attained 95+% training accuracy within a few epochs, but showed significantly poorer and highly varied performance on the test set. More complex models had accuracies ranging as far as from 60% to 85%, often in consecutive epochs (despite there being little change in training set performance). Training a model beyond two to three epochs did not yield any significant improvement in overall test set accuracy (sometimes resulting in reduced performance as compared to earlier epochs). This phenomenon was observed even with strong regularization applied. A typical learning curve demonstrating this behaviour is shown in the figure below.
+Generally, we found that all of the models overfitted extremely quickly, which may be primarily attributed to the small size of the dataset. Every model routinely attained high training accuracy within a few epochs, but showed significantly poorer and highly varied performance on the test set. More complex models had accuracies ranging as far as from 60% to 85%, often in consecutive epochs (despite there being little change in training set performance). Training a model beyond two to three epochs did not yield any significant improvement in overall test set accuracy (sometimes resulting in reduced performance as compared to earlier epochs). This phenomenon was observed even with strong regularization applied. A typical learning curve demonstrating this behaviour is shown in the figure below.
 
 ![](plots/learning_curve.png)
 
@@ -151,9 +151,9 @@ Each ensemble consists of 10 distinct baseline models with the architecture desc
 
 Each individual baseline model was trained on 75% of the training dataset for 20 epochs, to reduce the overfitting of each model on the training set.
 
-As mentioned in 2.2, each model showed a high variance in test set accuracy between epochs. Besides tracking the model performance, we used the test set to produce model evaluation metrics such that we could select the model which is most generalizable. To this end, we saved the model that performed the best out of all 20 epochs, instead of naively saving the final model after 20 epochs, with the rationale that a model which generalizes well to the test set would also generalize well to all other data, as well as to account for variations in the generalizability of the model throughout the training process.
+As mentioned in 2.2, each model showed a high variance in test set accuracy between epochs. Besides tracking the model performance, we used the test set to produce model evaluation metrics such that we could select the model which is most generalizable. To this end, we saved the model that performed the best out of all 20 epochs, instead of naively saving the final model after 20 epochs, with the rationale that a model which generalizes well to the test set would also generalize well to all other data.
 
-As this is a medical diagnosis, we factored in sensitivity as a model selection and evaluation metric, under the assumption that it is less costly to produce a false positive prediction than a false negative prediction (seeing as a false negative could potentially result in a pneumonia or covid carrier spreading the disease to others). The final evaluation metric was thus designed to take into account both accuracy and sensitivity, with an additional balancing term to ensure  that neither metric performs too poorly.
+As this is a medical diagnosis, we factored in sensitivity as a model selection and evaluation metric, under the assumption that it is less costly to produce a false positive prediction than a false negative prediction (seeing as a false negative could potentially result in a pneumonia or covid carrier spreading the disease to others). The final evaluation metric was thus designed to take into account both accuracy and sensitivity, with an additional balancing term to ensure  that neither metric is sacrificed too much.
 $$
 \text{performance} = \text{Acc.} + \text{Sens.} - |\text{Acc.} - \text{Sens.}|
 $$
@@ -164,16 +164,52 @@ The final training algorithm for an individual baseline model is as follows:
   * Evaluate the model using the aforementioned performance metric.
     * If it is better than the currently best-performing model, save the model and note it as the new best-performing model.
 
+For each type of classifier, we also selected for the optimal kernel size of the convolutional layers (between 3, 5, and 7).
+
+| Kernel Size | Classifier                | Test Accuracy | Test Sensitivity |
+| ----------- | ------------------------- | ------------- | ---------------- |
+| 3           | Infected/Non-infected     | 81.95%        | 97.38%           |
+| **5**       | **Infected/Non-infected** | **82.76%**    | **97.38%**       |
+| 7           | Infected/Non-infected     | 82.60%        | 98.16%           |
+| 3           | Covid/Non-covid           | 92.39%        | 89.93%           |
+| **5**       | **Covid/Non-covid**       | **90.55%**    | **92.09%**       |
+| 7           | Covid/Non-covid           | 86.88%        | 93.53%           |
+
+Based on these results, we chose the models with the kernel size of 5 for the final ensemble assembly.
+
 
 ## 3. Results 
-- [ ] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 
-- [ ] Discuss if we expected that COVID_NON-COVID was harder than INFECTED_NOT-INFECTED, why? 
-- [ ] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why?
+- [x] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 
+- [x] Discuss if we expected that COVID_NON-COVID was harder than INFECTED_NOT-INFECTED, why? 
+- [x] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why? (2.4.1)
 - [ ] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
 - [ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
 - [ ] Feature maps
 
+### 3.1 Validation Set Performance
+
+The diagram below shows the performance of the two-part binary classifier on the validation set. As we incorporated sensitivity into the model selection, it was able to achieve 100% sensitivity with the tradeoff of a relatively lower accuracy. All misclassifications came from either a normal case being classified as infected, or a infected non-covid case being classified as a covid case.
+
+![](plots/val_bin.png)
+
+The diagram below shows the performance of the ternary classifier on the validation set. Like the two-part binary classifier, it exhibits a cautious characteristic and attains 100% sensitivity, but has a lower accuracy, as predicted in 2.1.2.
+
+![](plots/val_three.png)
+
+### 3.2 Relative Difficulties of Binary Classification
+
+We hypothesized that the infected/non-infected classification problem would be easier than the covid/non-covid classification problem, with the assumption that the difference between an infected and non-infected x-ray would be more significant than the difference between a covid and infected non-covid x-ray, which might require looking into finer details of the image.
+
+With reference to the table in 2.4.1, the infected/non-infected classifier exhibited a lower accuracy of 82% compared to the covid/non-covid classifier, which had an accuracy of 90%. This appears to contradict the hypothesis. However, the infected/non-infected classifier also has a higher sensitivity of 97%, compared to 92% for the covid/non-covid classifier.
+
+This may also be attributed to the relative imbalances in the dataset. While 73% of the dataset has the infected label, only 35% of the infected samples are covid cases. It may thus be more challenging for a model to identify positive covid cases correctly as compared to positive infected cases, since the dataset consists of a relatively smaller proportion of positive labels.
 
 
 
+infected
 
+![](feature_maps/inf_feature_map.jpg)
+
+covid
+
+![](feature_maps/cov_feature_map.jpg)
