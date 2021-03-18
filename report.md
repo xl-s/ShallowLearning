@@ -5,11 +5,11 @@ By: Chan Luo Qi (1002983), Seow Xu Liang (xxxx)
 ### 1.1 Dataset Exploration 
 
 #### 1.1.1 Data distribution 
--[x] distribution of images 
--[x] discussion of whether dataset is balanced / uniformly distributed etc - not sure if enough
--[x] graphs 
--[x] discuss typical data processing operations applied, why? 
--[ ] (Bonus) Data Augmentation techniques, why and proof of how it benefited the model 
+- [x] distribution of images 
+- [x] discussion of whether dataset is balanced / uniformly distributed etc - not sure if enough
+- [x] graphs 
+- [x] discuss typical data processing operations applied, why? 
+- [ ] (Bonus) Data Augmentation techniques, why and proof of how it benefited the model 
 
 
 | | Normal | Infected (Non-Covid) | Infected (Covid)|Total|
@@ -60,16 +60,16 @@ this is a quick method of generation more training samples within reasonable exp
 
 
 ## 2. Classifier 
--[x] Discuss difference between the two architectures above and defend which one we chose and why 
--[ ] Discuss reasons behind this choice of model structure (types of layers, # of params)
--[x] Discuss value for mini-batch size 
--[x] Explain choice of loss function and its parameters (if any)
--[x] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
+- [x] Discuss difference between the two architectures above and defend which one we chose and why 
+- [ ] Discuss reasons behind this choice of model structure (types of layers, # of params)
+- [x] Discuss value for mini-batch size 
+- [x] Explain choice of loss function and its parameters (if any)
+- [x] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
 
--[x] Explain choice of optimiser and its parameters
--[ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
--[ ] Explain choice of initialisation of model parameters
--[ ] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
+- [x] Explain choice of optimiser and its parameters
+- [ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
+- [ ] Explain choice of initialisation of model parameters
+- [ ] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
 
 ### 2.1 Choice of Architecture
 #### 2.1.1 Difference in architecture
@@ -119,7 +119,7 @@ Thus, we chose a batch size of 32 in the end.
 
 #### 2.2.4 Loss function 
 The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used as this is a classification problem. As the dataset is biased,
-we used cross-entropy weights as calculated: $$ w_0 = (n_0 + n_1)/(2*n_0) $$, where $$n_0 = # of samples with label 0, and w_0 = weight for class 0$$. 
+we used cross-entropy weights as calculated: $ w_0 = (n_0 + n_1)/(2*n_0) $, where $n_0 = $ # of samples with label 0, and $w_0 =$ weight for class 0. 
 
 |infected|normal|
 |:---:|:---:|
@@ -162,12 +162,12 @@ describe the ensemble method here?
 
 
 ## 3. Results 
--[ ] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 
--[ ] Discuss if we expected that COVID_NON-COVID was harder than INFECTED_NOT-INFECTED, why? 
--[ ] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why?
--[ ] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
--[ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
--[ ] Feature maps
+- [ ] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 
+- [ ] Discuss if we expected that COVID_NON-COVID was harder than INFECTED_NOT-INFECTED, why? 
+- [ ] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why?
+- [ ] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
+- [ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
+- [ ] Feature maps
 
 
 
