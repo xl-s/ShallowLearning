@@ -186,7 +186,7 @@ def run(N_EPOCH, L_RATE, W_DECAY, class_type, load=None, save=None, loss_wt=None
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    train_loader = load_data(kind="train", class_type=class_type, transform=aug_transform, shuffle=True, batch_size=32)
+    train_loader = load_data(kind="train", class_type=class_type, transform=aug_transform, shuffle=True, batch_size=64)
     test_loader = load_data(kind="test", class_type=class_type, transform=clean_transform, shuffle=True, batch_size=32)
     val_loader = load_data(kind="val", class_type=class_type, transform=clean_transform, shuffle=True, batch_size=8)
 
@@ -261,7 +261,7 @@ def tune():
     # all_test.to_json("test_wtdecay.json")
 
 
-tune()
+# tune()
 
 def plot_epochs(metrics, name):
     epoch = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -278,7 +278,7 @@ def plot_epochs(metrics, name):
     plt.show()
 
 # NORMAL_INFECTED
-# train_metrics, test_metrics = run(8, 2.3e-6, 5e-3, ClassType.NORMAL_INFECTED, save="base.model", loss_wt=0.3)
+train_metrics, test_metrics = run(8, 2.3e-6, 5e-3, ClassType.NORMAL_INFECTED, save="base.model", loss_wt=0.25)
 
 # train_metrics, test_metrics = run(8, 2.3e-6, 5e-3, ClassType.NORMAL_INFECTED, save="base.model", loss_wt=0.3)
 # train_metrics.to_json("train_woscheduler.json")

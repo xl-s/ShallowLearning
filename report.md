@@ -3,7 +3,6 @@ By: Chan Luo Qi (1002983), Seow Xu Liang (xxxx)
 
 ## 1. Dataset 
 ### 1.1 Dataset Exploration 
-
 #### 1.1.1 Data distribution 
 -[x] distribution of images 
 -[x] discussion of whether dataset is balanced / uniformly distributed etc - not sure if enough
@@ -163,11 +162,12 @@ describe the ensemble method here?
 
 ## 3. Results 
 -[ ] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 
+-[ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
+-[ ] Feature maps
+
 -[ ] Discuss if we expected that COVID_NON-COVID was harder than INFECTED_NOT-INFECTED, why? 
 -[ ] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why?
 -[ ] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
--[ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
--[ ] Feature maps
 
 
 
