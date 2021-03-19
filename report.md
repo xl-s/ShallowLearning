@@ -9,7 +9,7 @@ By: Chan Luo Qi (1002983), Seow Xu Liang (1003324)
 - [x] discussion of whether dataset is balanced / uniformly distributed etc - not sure if enough
 - [x] graphs 
 - [x] discuss typical data processing operations applied, why? 
-- [ ] (Bonus) Data Augmentation techniques, why and proof of how it benefited the model 
+- [x] (Bonus) Data Augmentation techniques, why and proof of how it benefited the model 
 
 
 | | Normal | Infected (Non-Covid) | Infected (Covid)|Total|
@@ -42,10 +42,14 @@ From the 3 different distributions as described above, we see that the dataset i
 As discussed in Section 1.1, the dataset provided is not balanced. Data augmentation can help to generate new training samples  for the model to learn. In our model, we make use of ```Torchvision.Transforms.Compose``` to augment our training samples.  In every epoch, the transformations are randomly applied to the training dataset - that is, the model sees a set of slightly varied input each epoch.  
 
 1. **Photometric distortions.** A quick visual scan of the dataset reveals that training samples vary in terms of brightness and saturation.  Thus, we apply photometric distortions randomly to samples in their hue, saturation and brightness. This could help to better generalise the model. 
-
 2. **Horizontal Flips.** X-rays of the chest are quite symmetrical, with the exception of the presence of a denser mass on the right-side of the radiograph (indicating the heart). Flipping samples horizontally provide a quick method of generating more training data within reasonable expectations. 
-
 3. **Rotations.** A small rotation of 10 degrees was randomly applied to training samples. Similar to horizontal flips, this is a quick method of generation more training samples within reasonable expectations. 
+
+The effect of data augmentation is positive -- our model obtains higher sensitivity when training with augmented data as compared to non-augmented data, while maintaining a similar level of accuracy. This evaluation is captured in the graph below. 
+
+![](model_structures/augmentation.png)
+
+
 
 
 ## 2. Classifier 
@@ -56,7 +60,7 @@ As discussed in Section 1.1, the dataset provided is not balanced. Data augmenta
 - [x] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
 
 - [x] Explain choice of optimiser and its parameters
-- [ ] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
+- [x] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
 - [ ] Explain choice of initialisation of model parameters
 - [x] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
 
@@ -88,7 +92,7 @@ The team primarily used convolutional layers in our model design, which is the m
 
 We experimented with a variety of model architectures by varying the number of convolutional layers (together with the number of channels) and fully connected layers. We also experimented with the inclusion of batchnorm and dropout layers, as well as residual and inception networks. The basic convolutional model showed the most promising performance with batch normalization, but without dropout layers.
 
-Generally, we found that all of the models overfitted extremely quickly, which may be primarily attributed to the small size of the dataset. Every model routinely attained high training accuracy within a few epochs, but showed significantly poorer and highly varied performance on the test set. More complex models had accuracies ranging as far as from 60% to 85%, often in consecutive epochs (despite there being little change in training set performance). Training a model beyond two to three epochs did not yield any significant improvement in overall test set accuracy (sometimes resulting in reduced performance as compared to earlier epochs). This phenomenon was observed even with strong regularization applied. A typical learning curve demonstrating this behaviour is shown in the figure below.
+Generally, we found that all of the models overfitted extremely quickly, which may be primarily attributed to the small size of the dataset. Every model routinely attained high training accuracy within a few epochs, but showed significantly poorer and highly varied performance on the test set. More complex models had accuracies ranging widely from 60% to 85%, often in consecutive epochs (despite there being little change in training set performance). Training a model beyond two to three epochs did not yield any significant improvement in overall test set accuracy (sometimes resulting in reduced performance as compared to earlier epochs). This phenomenon was observed even with strong regularization applied. A typical learning curve demonstrating this behaviour is shown in the figure below.
 
 ![](plots/learning_curve.png)
 
@@ -105,7 +109,10 @@ Theoretically, a smaller batch size might compute faster. However, as the model 
 Thus, we chose a batch size of 32 in the end. 
 
 #### 2.2.2 Loss function 
-The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used as this is a classification problem. As the dataset is biased, we used cross-entropy weights as calculated: $ w_0 = (n_0 + n_1)/(2*n_0) $, where $n_0 = $ # of samples with label 0, and $w_0 =$ weight for class 0. 
+The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used as this is a classification problem. As the dataset is biased, we used cross-entropy weights as calculated: 
+$$
+w_0 = \frac{(n_0 + n_1)}{(2n_0)}
+$$
 
 |infected|normal|
 |:---:|:---:|
@@ -122,8 +129,6 @@ Initially, we used the Adam optimiser as it is the "default" choice in deep lear
 
 Reading pyTorch's documentation, we found that ```torch.optim.AdamW``` could alleviate overfitting by implementing a weight decay parameter that penalises the magnitude of weights. 
 
-[need to show graph to prove less overfitting????]
-
 Hyperparameters Learning Rate (LR) and Weight Decay (WD) of the AdamW optimiser was tuned separately for each classifier. This was done by changing the value of the hyperparameter while holding all other factors constant. The model was trained for 8 epochs and the last 4 values of each performance metric was averaged to obtain the final performance of the model for that hyperparameter value. 
 
 #### 2.3.1 Learning Rate (LR)
@@ -138,7 +143,16 @@ Hyperparameters Learning Rate (LR) and Weight Decay (WD) of the AdamW optimiser 
 |Graph of Performance against Log(WD)|![tune_LR_1](tuning_norm/test_wtdecay.png)|![tune_LR_2](tuning_inf/test_wtdecay.png)|
 |Optimal WD|5e-3|5e-3|
 
+#### 2.3.3 Learning Rate Scheduler
+
+We also tried to make use of a LR scheduler to improve performance. However, we realised that while the LR scheduler helped to push accuracy upwards, sensitivity suffered. 
+
+![](model_structures/scheduler.png)
+
+In the end, we chose the run the model without the learning rate scheduler to prioritise sensitivity over accuracy. A more detailed explanation of this choice is found in Section 2.4.1. 
+
 ### 2.4 Final Model Architecture
+
 To combat the overfitting of the model and improve robustness, we settled on utilizing an ensemble method for our final model architecture. 
 
 We constructed two ensemble models, one to predict on covid/non-covid and another on infected/normal, which was then assembled into a two-part binary classifier.
@@ -155,7 +169,7 @@ As mentioned in 2.2, each model showed a high variance in test set accuracy betw
 
 As this is a medical diagnosis, we factored in sensitivity as a model selection and evaluation metric, under the assumption that it is less costly to produce a false positive prediction than a false negative prediction (seeing as a false negative could potentially result in a pneumonia or covid carrier spreading the disease to others). The final evaluation metric was thus designed to take into account both accuracy and sensitivity, with an additional balancing term to ensure  that neither metric is sacrificed too much.
 $$
-\text{performance} = \text{Acc.} + \text{Sens.} - |\text{Acc.} - \text{Sens.}|
+\text{performance} = \text{Acc.} + \text{Sens.} - 0.5 \times |\text{Acc.} - \text{Sens.}|
 $$
 The final training algorithm for an individual baseline model is as follows:
 
@@ -182,9 +196,9 @@ Based on these results, we chose the models with the kernel size of 5 for the fi
 - [x] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 
 - [x] Discuss if we expected that COVID_NON-COVID was harder than INFECTED_NOT-INFECTED, why? 
 - [x] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why? (2.4.1)
-- [ ] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
+- [x] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
 - [ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
-- [ ] Feature maps
+- [x] Feature maps
 
 ### 3.1 Validation Set Performance
 
@@ -206,10 +220,18 @@ This may also be attributed to the relative imbalances in the dataset. While 73%
 
 
 
-infected
+### 3.3 Feature Maps 
 
-![](feature_maps/inf_feature_map.jpg)
+Feature maps of both infected and covid classifiers are generated as below. Although it is not obvious to us what the model is trying to pick up at each filter (as we are neither the machine nor the doctor), we can still observe that different features / structures of the image is being highlighted at each stage. An obvious structure that the filters detect is the ribcages. 
 
-covid
+|               infected                |                 covid                 |
+| :-----------------------------------: | :-----------------------------------: |
+| ![](feature_maps/inf_feature_map.jpg) | ![](feature_maps/cov_feature_map.jpg) |
 
-![](feature_maps/cov_feature_map.jpg)
+### 3.4 Relation to the Real-World 
+
+From some research, (please note that none of the medical explanation described here are professional and are solely gleaned from searches off the internet!), we find the concept of applying deep learning in classifying radiographs is quite similar to how doctors do it. Specifically, doctors diagnose from radiographs primarily from its **silhouette sign **-- they are concerned about loss of clarify in structures on the radiograph, and the position of the problem area might suggest different causes. CNNs are similar here in trying to detect structures that stand out from the *established norm*. The difference here is that the CNN needs to establish its own standards by way of supervised learning, while doctors already have a medical standard to adhere to, even if each patient's situation differs. 
+
+The classification process of doctors and CNNs are also similar, where they both learn from experience and iterations of the same task. Doctors get feedback from their clinicians and patients while CNNs get feedback in the form of loss, accuracy, and other performance metrics. 
+
+A large difference in diagnosis stems from how the x-ray image is used. For doctors, it is a *tool* that can help them to confirm or disprove a diagnosis. Most of the time, doctors have other contextual evidence (i.e. symptoms of sickness) to help them. For our model, the CNN relies solely on the image for classification. 
