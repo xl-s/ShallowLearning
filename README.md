@@ -1,4 +1,8 @@
-# ShallowLearning
+# Deep Learning Small Project
+
+Authors:
+* Chan Luo Qi (1002983)
+* Seow Xu Liang (1003324)
 
 ## Model Files
 
