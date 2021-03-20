@@ -24,11 +24,11 @@ By: Chan Luo Qi (1002983), Seow Xu Liang (1003324)
 |![dataset distribution](model_structures/dataset_distr.png)|![normal_distribution](model_structures/normal_distr.png)|![infected_distribution](model_structures/infected_distr.png)|
 |Fig. 1A|Fig. 1B|Fig. 1C|
 
-1. **Overall Distribution**: Dataset is unbalanced with double the number infected-non-Covid samples (47.49%) than normal (25.47%) and infected-covid samples (27.04%). 
+1. **Overall Distribution**: Dataset is unbalanced with double the number infected-non-Covid samples (47.49%) than normal (25.47%) and infected-Covid samples (27.04%). 
 2. **Distribution of Normal vs Infected**: Dataset contains 72.96% infected samples (includes Covid and non-Covid samples) with the remaining 27.04% as normal samples. 
-3. **Distribution of Infected** (Covid vs Non-Covid): 65.08% of infected samples are Covid while 34.92% are non-Covid. 
+3. **Distribution of Infected** (Covid vs Non-Covid): 65.08% of infected samples are non-Covid while 34.92% are Covid. 
 
-From the 3 different distributions as described above, we see that the dataset is unbalanced, with a higher proportion of samples being infected-Covid samples. 
+From the 3 different distributions as described above, we see that the dataset is unbalanced, with a higher proportion of samples being infected-non-Covid samples. 
 
 ### 1.1.2 Train-Test-Validation Split
 ![dataset_split](model_structures/datasetsplit.png)
@@ -43,7 +43,7 @@ As discussed in Section 1.1, the dataset provided is not balanced. Data augmenta
 
 1. **Photometric distortions.** A quick visual scan of the dataset reveals that training samples vary in terms of brightness and saturation.  Thus, we apply photometric distortions randomly to samples in their hue, saturation and brightness. This could help to better generalise the model. 
 2. **Horizontal Flips.** X-rays of the chest are quite symmetrical, with the exception of the presence of a denser mass on the right-side of the radiograph (indicating the heart). Flipping samples horizontally provide a quick method of generating more training data within reasonable expectations. 
-3. **Rotations.** A small rotation of 10 degrees was randomly applied to training samples. Similar to horizontal flips, this is a quick method of generation more training samples within reasonable expectations. 
+3. **Rotations.** We observed that some samples within the dataset exhibited a small amount of rotation. A small rotation of up to 10 degrees was thus randomly applied to training samples. Similarly to horizontal flips, this is a quick method of generation more training samples within reasonable expectations. 
 
 The effect of data augmentation is positive -- our model obtains higher sensitivity when training with augmented data as compared to non-augmented data, while maintaining a similar level of accuracy. This evaluation is captured in the graph below. 
 
@@ -66,7 +66,7 @@ The effect of data augmentation is positive -- our model obtains higher sensitiv
 
 ### 2.1 Choice of Architecture
 #### 2.1.1 Difference in architecture
-The 2-part binary architecture contains 2 sequential classifiers. The first classifier discriminates normal samples against infected samples whereas the second classifier only takes into account "infected" samples and discriminates against covid and non-covid samples within those found to be infected. 
+The 2-part binary architecture contains 2 sequential classifiers. The first classifier discriminates normal samples against infected samples whereas the second classifier only takes into account "infected" samples and discriminates against Covid and non-Covid samples within those found to be infected. 
 
 In contrast, a single tri-class classifier completes the task in one step, distinguishing the 3 classes at the same time. 
 
@@ -166,9 +166,9 @@ In the end, we chose the run the model without the learning rate scheduler to pr
 
 To combat the overfitting of the model and improve robustness, we settled on utilizing an ensemble method for our final model architecture. 
 
-We constructed two ensemble models, one to predict on covid/non-covid and another on infected/normal, which was then assembled into a two-part binary classifier.
+We constructed two ensemble models, one to predict on Covid/non-Covid and another on infected/normal, which was then assembled into a 2-part binary classifier.
 
-We also constructed an additional standalone ternary classification ensemble model, to evaluate our hypothesis that a two-part binary classifier would outperform a single ternary classifier.
+We also constructed an additional standalone tri-class classification ensemble model, to evaluate our hypothesis that a 2-part binary classifier would outperform a standalone tri-class classifier.
 
 Each ensemble consists of 10 distinct baseline models with the architecture described in 2.2. At prediction time, the input is run through all 10 models, and the majority output is treated as the prediction.
 
@@ -178,7 +178,7 @@ Each individual baseline model was trained on 75% of the training dataset for 20
 
 As mentioned in 2.2, each model showed a high variance in test set accuracy between epochs. Besides tracking the model performance, we used the test set to produce model evaluation metrics such that we could select the model which is most generalizable. To this end, we saved the model that performed the best out of all 20 epochs, instead of naively saving the final model after 20 epochs, with the rationale that a model which generalizes well to the test set would also generalize well to all other data.
 
-As this is a medical diagnosis, we factored in sensitivity as a model selection and evaluation metric, under the assumption that it is less costly to produce a false positive prediction than a false negative prediction (seeing as a false negative could potentially result in a pneumonia or covid carrier spreading the disease to others). The final evaluation metric was thus designed to take into account both accuracy and sensitivity, with an additional balancing term to ensure  that neither metric is sacrificed too much.
+As this is a medical diagnosis, we factored in sensitivity as a model selection and evaluation metric, under the assumption that it is less costly to produce a false positive prediction than a false negative prediction (seeing as a false negative could potentially result in a pneumonia or Covid carrier spreading the disease to others). The final evaluation metric was thus designed to take into account both accuracy and sensitivity, with an additional balancing term to ensure  that neither metric is sacrificed too much.
 $$
 \text{performance} = \text{Acc.} + \text{Sens.} - 0.5 \times |\text{Acc.} - \text{Sens.}|
 $$
@@ -213,11 +213,11 @@ Based on these results, we chose the models with the kernel size of 5 for the fi
 
 ### 3.1 Validation Set Performance
 
-The diagram below shows the performance of the two-part binary classifier on the validation set. As we incorporated sensitivity into the model selection, it was able to achieve 100% sensitivity with the tradeoff of a relatively lower accuracy. All misclassifications came from either a normal case being classified as infected, or a infected non-covid case being classified as a covid case.
+The diagram below shows the performance of the 2-part binary classifier on the validation set. As we incorporated sensitivity into the model selection, it was able to achieve 100% sensitivity with the tradeoff of a relatively lower accuracy. All misclassifications came from either a normal case being classified as infected, or a infected non-Covid case being classified as a Covid case.
 
 ![](plots/val_bin.png)
 
-The diagram below shows the performance of the ternary classifier on the validation set. Like the two-part binary classifier, it exhibits a cautious characteristic and attains 100% sensitivity, but has a lower accuracy, as predicted in 2.1.2.
+The diagram below shows the performance of the tri-class classifier on the validation set. Like the 2-part binary classifier, it exhibits a cautious characteristic and attains 100% sensitivity, but has a lower accuracy, as predicted in 2.1.2.
 
 ![](plots/val_three.png)
 
@@ -225,26 +225,26 @@ The diagram below shows the performance of the ternary classifier on the validat
 
 #### 3.2.1 Relative Difficulties of Binary Classification
 
-We hypothesized that the infected/non-infected classification problem would be easier than the covid/non-covid classification problem, with the assumption that the difference between an infected and non-infected x-ray would be more significant than the difference between a covid and infected non-covid x-ray, which might require looking into finer details of the image.
+We hypothesized that the infected/non-infected classification problem would be easier than the Covid/non-Covid classification problem, with the assumption that the difference between an infected and non-infected x-ray would be more significant than the difference between a Covid and infected non-Covid x-ray, which might require looking into finer details of the image.
 
-With reference to the table in 2.4.1, the infected/non-infected classifier exhibited a lower accuracy of 82% compared to the covid/non-covid classifier, which had an accuracy of 90%. This appears to contradict the hypothesis. However, the infected/non-infected classifier also has a higher sensitivity of 97%, compared to 92% for the covid/non-covid classifier.
+With reference to the table in 2.4.1, the infected/non-infected classifier exhibited a lower accuracy of 82% compared to the Covid/non-Covid classifier, which had an accuracy of 90%. This appears to contradict the hypothesis. However, the infected/non-infected classifier also has a higher sensitivity of 97%, compared to 92% for the Covid/non-Covid classifier.
 
-This may also be attributed to the relative imbalances in the dataset. While 73% of the dataset has the infected label, only 35% of the infected samples are covid cases. It may thus be more challenging for a model to identify positive covid cases correctly as compared to positive infected cases, since the dataset consists of a relatively smaller proportion of positive labels.
+This may also be attributed to the relative imbalances in the dataset. While 73% of the dataset has the infected label, only 35% of the infected samples are Covid cases. It may thus be more challenging for a model to identify positive Covid cases correctly as compared to positive infected cases, since the dataset consists of a relatively smaller proportion of positive labels.
 
 #### 3.2.2 Typical examples of failures
 
 | Example                                    | Observations                                                 |
 | ------------------------------------------ | ------------------------------------------------------------ |
-| ![](model_structures/normal_failure.png)   | The diagram shows a typical example of when the model predicts a "normal" sample as "infected/covid". This occurs when the radiograph is murkier overall, as compared the the correctly predicted sample. We also observe a higher "level" of white mass from the bottom on the wrongly predicted sample. |
-| ![](model_structures/infected_failure.png) | The diagram shows a typical example of when the model predicts an "infected/non-covid" sample as "infected/covid". We observe that the incorrectly labelled radiograph is clearer at the lungs area than the correctly predicted sample. We also observe a lower "level" of white mass from the bottom on the wrongly predicted sample. |
+| ![](model_structures/normal_failure.png)   | The diagram shows a typical example of when the model predicts a "normal" sample as "infected/Covid". This occurs when the radiograph is murkier overall, as compared the the correctly predicted sample. We also observe a higher "level" of white mass from the bottom on the wrongly predicted sample. |
+| ![](model_structures/infected_failure.png) | The diagram shows a typical example of when the model predicts an "infected/non-Covid" sample as "infected/Covid". We observe that the incorrectly labelled radiograph is clearer at the lungs area than the correctly predicted sample. We also observe a lower "level" of white mass from the bottom on the wrongly predicted sample. |
 
 
 
 ### 3.3 Feature Maps 
 
-Feature maps of both infected and covid classifiers are generated as below. Although it is not obvious to us what the model is trying to pick up at each filter (as we are neither the machine nor the doctor), we can still observe that different features / structures of the image is being highlighted at each stage. An obvious structure that the filters detect is the ribcages. 
+Feature maps of both infected and Covid classifiers are generated as below. Although it is not obvious to us what the model is trying to pick up at each filter (as we are neither the machine nor the doctor), we can still observe that different features / structures of the image is being highlighted at each stage. An obvious structure that the filters detect is the ribcages. 
 
-|               infected                |                 covid                 |
+|            Infected/Normal            |            Covid/Non-Covid            |
 | :-----------------------------------: | :-----------------------------------: |
 | ![](feature_maps/inf_feature_map.jpg) | ![](feature_maps/cov_feature_map.jpg) |
 
