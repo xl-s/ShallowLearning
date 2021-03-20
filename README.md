@@ -10,7 +10,7 @@ Dataset should be placed in a `dataset` folder.
 
 ## Notebook
 
-The `notebook.ipynb` file contains instructions and demonstrations of how to define, train, and evaluate models.
+The `notebook.ipynb` file contains instructions and demonstrations of how to use this repository to define, train, and evaluate models.
 
 ## Report
 
