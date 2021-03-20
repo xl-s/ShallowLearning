@@ -7,3 +7,11 @@ Model files can be downloaded from [here](https://sutdapac-my.sharepoint.com/:f:
 ## Dataset
 
 Dataset should be placed in a `dataset` folder.
+
+## Notebook
+
+The `notebook.ipynb` file contains instructions and demonstrations of how to define, train, and evaluate models.
+
+## Report
+
+The PDF report in located in the `report.pdf` file.
