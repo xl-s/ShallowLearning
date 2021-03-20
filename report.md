@@ -1,23 +1,20 @@
+
+
 # Deep Learning Small Project 
+
 By: Chan Luo Qi (1002983), Seow Xu Liang (1003324)
 
 ## 1. Dataset 
 ### 1.1 Dataset Exploration 
 
 #### 1.1.1 Data distribution 
-- [x] distribution of images 
-- [x] discussion of whether dataset is balanced / uniformly distributed etc - not sure if enough
-- [x] graphs 
-- [x] discuss typical data processing operations applied, why? 
-- [x] (Bonus) Data Augmentation techniques, why and proof of how it benefited the model 
-
 
 | | Normal | Infected (Non-Covid) | Infected (Covid)|Total|
 |:---:|:---:|:---:|:---:|:---:|
-|Train|1341|2530|1345|5216|
-|Test|234|242|138|614|
-|Validation|8|8|8|24|
-|Total|1583|2780|1491|5854|
+|**Train**|1341|2530|1345|5216|
+|**Test**|234|242|138|614|
+|**Validation**|8|8|8|24|
+|**Total**|1583|2780|1491|5854|
 
 |Overall distribution|Normal vs Infected|Infected Distribution|
 |:---:|:---:|:---:|
@@ -33,13 +30,16 @@ From the 3 different distributions as described above, we see that the dataset i
 ### 1.1.2 Train-Test-Validation Split
 ![dataset_split](model_structures/datasetsplit.png)
 
+A higher proportion (14.78%) of normal samples are partitioned for training as opposed to infected covid and non-covid samples. 
+
 ### 1.2 Data Processing
+
 1. **Normalisation.** Used to standardise input features to ensure better and faster convergence of the model. 
 
 2. **Grayscale.** X-ray images are naturally quite monochrome to the human eye. However, the input images are saved "in colour" - that is, they contain 3 RGB channels. We decided to convert all inputs to grayscale, compressing input to a single channel. This can help make the model more generalisable (less detail) and also increase speed of computation. 
 
 ### 1.3 Data Augmentation
-As discussed in Section 1.1, the dataset provided is not balanced. Data augmentation can help to generate new training samples  for the model to learn. In our model, we make use of ```Torchvision.Transforms.Compose``` to augment our training samples.  In every epoch, the transformations are randomly applied to the training dataset - that is, the model sees a set of slightly varied input each epoch.  
+As discussed in Section 1.1, the dataset provided is not balanced. Data augmentation can help to generate new training samples  for the model to learn. In our model, we make use of ```Torchvision.Transforms.Compose``` to augment our training samples.  In every epoch, the transformations are randomly applied to the training dataset -- that is, the model sees a set of slightly varied input each epoch.  
 
 1. **Photometric distortions.** A quick visual scan of the dataset reveals that training samples vary in terms of brightness and saturation.  Thus, we apply photometric distortions randomly to samples in their hue, saturation and brightness. This could help to better generalise the model. 
 2. **Horizontal Flips.** X-rays of the chest are quite symmetrical, with the exception of the presence of a denser mass on the right-side of the radiograph (indicating the heart). Flipping samples horizontally provide a quick method of generating more training data within reasonable expectations. 
@@ -53,17 +53,6 @@ The effect of data augmentation is positive -- our model obtains higher sensitiv
 
 
 ## 2. Classifier 
-- [x] Discuss difference between the two architectures above and defend which one we chose and why 
-- [x] Discuss reasons behind this choice of model structure (types of layers, # of params)
-- [x] Discuss value for mini-batch size 
-- [x] Explain choice of loss function and its parameters (if any)
-- [x] (Bonus) Implementing regularisation on loss function and discuss its appropriate choice of parameters and benefits for model 
-
-- [x] Explain choice of optimiser and its parameters
-- [x] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
-- [x] Explain choice of initialisation of model parameters
-- [x] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
-
 ### 2.1 Choice of Architecture
 #### 2.1.1 Difference in architecture
 The 2-part binary architecture contains 2 sequential classifiers. The first classifier discriminates normal samples against infected samples whereas the second classifier only takes into account "infected" samples and discriminates against covid and non-covid samples within those found to be infected. 
@@ -71,7 +60,7 @@ The 2-part binary architecture contains 2 sequential classifiers. The first clas
 In contrast, a single tri-class classifier completes the task in one step, distinguishing the 3 classes at the same time. 
 
 #### 2.1.2 Hypothesis 
-The team hypothesised that a 2-part binary architecture would be more suitable for the problem as classification task of (1) Normal vs Infected and; (2) Covid vs Non-Covid is quite different. The model will probably have to consider different sets of structures for tasks (1) and (2). For example, the model might be concerned with finer details in the radiograph in task (2) while considering larger structures for task (1). 
+The team hypothesised that a 2-part binary architecture would be more suitable for the problem as classification task of (1) Normal vs Infected and; (2) Covid vs Non-Covid is quite different. The model probably considers different sets of structures for tasks (1) and (2). For example, the model might be concerned with finer details in the radiograph in task (2) while considering larger structures in task (1). 
 
 To this end, we chose to work with a 2-part binary architecture.
 
@@ -83,7 +72,7 @@ Experiments using both architectures were carried out and our hypothesis was con
 |2-part binary classifier|79.87%|79.19%|72.00%|
 |tri-class classifier|81.58%|71.54%|60.00%|
 
-Generally, the 2-part binary classifier gave better results. However, its improvement over the tri-class classifier was less than expected and could be attributed to the unbalanced dataset. 
+Generally, the 2-part binary classifier gave better results. 
 
 ### 2.2 Model Design
 The team primarily used convolutional layers in our model design, which is the most appropriate for an image-classification task. 
@@ -110,22 +99,26 @@ Thus, we chose a batch size of 32 in the end.
 
 #### 2.2.2 Parameter Initialisation
 
-Parameters were initialised randomly to avoid any potential model symmetry. It was also a good way to ensure some variance of training between each training epoch. 
+Parameters were initialised randomly to avoid any potential model symmetry. It was also a good way to ensure some variance in training at each training epoch. 
 
 #### 2.2.3 Loss function 
 
-The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used for this classification problem. As the dataset is biased, we used cross-entropy weights as calculated: 
+The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used for this classification problem. As the dataset is biased, we used cross-entropy weights as calculated (same as calculation in *scikit-learn*: 
 $$
 w_0 = \frac{(n_0 + n_1)}{(2n_0)}
 $$
 
 where $n_0$ represents the number of samples in class 0. 
 
-|infected|normal|
+1. Infected vs Normal Classifier
+
+|Infected|Normal|
 |:---:|:---:|
 |0.25|0.75|
 
-|covid|non-covid|
+2. Infected Covid vs Infected Non-Covid classifier 
+
+|Covid|Non-Covid|
 |:---:|:---:|
 |0.65|0.35|
 
@@ -134,7 +127,7 @@ Regularisation was also done on the loss function by using the ```weight_decay``
 ### 2.3 Choice of Optimiser
 Initially, we used the Adam optimiser as it is the "default" choice in deep learning models. However, we realised that Adam did not generalise well and resulted in overfitting quite quickly.
 
-Reading pyTorch's documentation, we found that ```torch.optim.AdamW``` could alleviate overfitting by implementing a weight decay parameter that penalises the magnitude of weights. This restricts the weights from becoming too large. 
+From the pyTorch documentation and readings, we found that ```torch.optim.AdamW```  could alleviate overfitting by implementing a weight decay parameter that penalises the magnitude of weights (Graetz, 2020). This restricts the weights from becoming too large. 
 
 Hyperparameters Learning Rate (LR) and Weight Decay (WD) of the AdamW optimiser was tuned separately for each classifier. This was done by changing the value of the hyperparameter while holding all other factors constant. The model was trained for 8 epochs and the last 4 values of each performance metric was averaged to obtain the final performance of the model for that hyperparameter value. 
 
@@ -204,13 +197,6 @@ Based on these results, we chose the models with the kernel size of 5 for the fi
 
 
 ## 3. Results 
-- [x] Subplot on the validation set with ground truth, predicted labels + all performance metrics used 
-- [x] Discuss if we expected that COVID_NON-COVID was harder than INFECTED_NOT-INFECTED, why? 
-- [x] Would it be better to have high overall accuracy or low true negatives / false positive rates? Why? (2.4.1)
-- [x] Does the model seem to replicate how doctors diagnose infections based on x-rays? 
-- [ ] (Bonus) Show typical samples of failures and discuss what might be the reason? 
-- [x] Feature maps
-
 ### 3.1 Validation Set Performance
 
 The diagram below shows the performance of the two-part binary classifier on the validation set. As we incorporated sensitivity into the model selection, it was able to achieve 100% sensitivity with the tradeoff of a relatively lower accuracy. All misclassifications came from either a normal case being classified as infected, or a infected non-covid case being classified as a covid case.
@@ -250,8 +236,17 @@ Feature maps of both infected and covid classifiers are generated as below. Alth
 
 ### 3.4 Relation to the Real-World 
 
-From some research, (please note that none of the medical explanation described here are professional and are solely gleaned from searches off the internet!), we find the concept of applying deep learning in classifying radiographs is quite similar to how doctors do it. Specifically, doctors diagnose from radiographs primarily from its **silhouette sign **-- they are concerned about loss of clarify in structures on the radiograph, and the position of the problem area might suggest different causes. CNNs are similar here in trying to detect structures that stand out from the *established norm*. The difference here is that the CNN needs to establish its own standards by way of supervised learning, while doctors already have a medical standard to adhere to, even if each patient's situation differs. 
+From some research, (please note that none of the medical explanation described here are professional and are solely gleaned from searches off the internet!), we find the concept of applying deep learning in classifying radiographs is quite similar to how doctors do it. Specifically, doctors diagnose from radiographs primarily from its **silhouette sign** (Voigt, 2008) -- they are concerned about loss of clarity in structures on the radiograph, and the position of the problem area might suggest different causes. CNNs are similar here in trying to detect structures that stand out from the *established norm*. The difference here is that the CNN needs to establish its own standards by way of supervised learning, while doctors already have a medical standard to adhere to, even if each patient's situation differs. 
 
 The classification process of doctors and CNNs are also similar, where they both learn from experience and iterations of the same task. Doctors get feedback from their clinicians and patients while CNNs get feedback in the form of loss, accuracy, and other performance metrics. 
 
 A large difference in diagnosis stems from how the x-ray image is used. For doctors, it is a *tool* that can help them to confirm or disprove a diagnosis. Most of the time, doctors have other contextual evidence (i.e. symptoms of sickness) to help them. For our model, the CNN relies solely on the image for classification. 
+
+# References 
+
+[1] Graetz, F. (2020, February 12). Why adamw matters. Retrieved March 20, 2021, from https://towardsdatascience.com/why-adamw-matters-736223f31b5d
+
+[2] Hasan, F. (2020, September 23). Deep learning with weighted cross entropy loss on imbalanced tabular data using fastai. Retrieved March 20, 2021, from https://towardsdatascience.com/deep-learning-with-weighted-cross-entropy-loss-on-imbalanced-tabular-data-using-fastai-fe1c009e184c
+
+[3] Voigt, S. (2008, May). How to read a chest x-ray – a step by step approach. Retrieved March 20, 2021, from http://www.southsudanmedicaljournal.com/archive/2008-05/how-to-read-a-chest-x-ray-a-step-by-step-approach.html
+
