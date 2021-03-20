@@ -61,7 +61,7 @@ The effect of data augmentation is positive -- our model obtains higher sensitiv
 
 - [x] Explain choice of optimiser and its parameters
 - [x] (Bonus) Implementing scheduler and discuss its appropriate choice of parameters and benefits 
-- [ ] Explain choice of initialisation of model parameters
+- [x] Explain choice of initialisation of model parameters
 - [x] Learning curves to show evolution of loss function and other performance metrics over epochs for both train and test sets
 
 ### 2.1 Choice of Architecture
@@ -71,7 +71,7 @@ The 2-part binary architecture contains 2 sequential classifiers. The first clas
 In contrast, a single tri-class classifier completes the task in one step, distinguishing the 3 classes at the same time. 
 
 #### 2.1.2 Hypothesis 
-The team hypothesised that a 2-part binary architecture would be more suitable for the problem. We theorised that classification task of (1) Normal vs Infected and; (2) Covid vs Non-Covid is quite different. The model will probably have to consider different sets of structures for task (1) and (2). For example, the model might be concerned with finer details in the radiograph in task (2) while considering larger structures for task (1). 
+The team hypothesised that a 2-part binary architecture would be more suitable for the problem as classification task of (1) Normal vs Infected and; (2) Covid vs Non-Covid is quite different. The model will probably have to consider different sets of structures for tasks (1) and (2). For example, the model might be concerned with finer details in the radiograph in task (2) while considering larger structures for task (1). 
 
 To this end, we chose to work with a 2-part binary architecture.
 
@@ -99,7 +99,7 @@ Generally, we found that all of the models overfitted extremely quickly, which m
 For this reason, we settled on a relatively basic convolutional model as a baseline model, with three convolutional layers and one fully connected hidden layer. Due to the small dataset, more complex architectures would only add overhead to the model without offering significant improvement in performance.
 
 #### 2.2.1 Mini-batch size 
-Theoretically, a smaller batch size might compute faster. However, as the model contains batchnorm layers, it is not ideal to have small batch sizes as the normalisation will not be stable. Based on conventions, a 32 or 4 batch size is normally used. We recorded the time taken for each batch size to complete 1 epoch:
+Theoretically, a smaller batch size might compute faster. However, as the model contains batchnorm layers, it is not ideal to have small batch sizes as  normalisation will not be stable. Based on conventions, a 32 or 64 batch size is normally used. We recorded the time taken for each batch size to complete 1 epoch:
 
 |Batch size|Time Taken (s)|
 |:---:|:---:|
@@ -108,11 +108,18 @@ Theoretically, a smaller batch size might compute faster. However, as the model 
 
 Thus, we chose a batch size of 32 in the end. 
 
-#### 2.2.2 Loss function 
-The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used as this is a classification problem. As the dataset is biased, we used cross-entropy weights as calculated: 
+#### 2.2.2 Parameter Initialisation
+
+Parameters were initialised randomly to avoid any potential model symmetry. It was also a good way to ensure some variance of training between each training epoch. 
+
+#### 2.2.3 Loss function 
+
+The **cross-entropy** loss function ```nn.CrossEntropyLoss```was used for this classification problem. As the dataset is biased, we used cross-entropy weights as calculated: 
 $$
 w_0 = \frac{(n_0 + n_1)}{(2n_0)}
 $$
+
+where $n_0$ represents the number of samples in class 0. 
 
 |infected|normal|
 |:---:|:---:|
@@ -122,14 +129,18 @@ $$
 |:---:|:---:|
 |0.65|0.35|
 
-Regularisation was also done on the loss function by using the ```weight_decay``` parameter of the optimiser. The value of weight decay was decided using hyperparameter tuning, further described in Section XX below.  
+Regularisation was also done on the loss function by using the ```weight_decay``` parameter of the optimiser. The value of weight decay was decided using hyperparameter tuning, further described in Section 2.3.2 below.  
 
 ### 2.3 Choice of Optimiser
-Initially, we used the Adam optimiser as it is the "default" choice in deep learning models. However, we realised that Adam did not generalise over the data well and resulted in overfitting quite quickly.
+Initially, we used the Adam optimiser as it is the "default" choice in deep learning models. However, we realised that Adam did not generalise well and resulted in overfitting quite quickly.
 
-Reading pyTorch's documentation, we found that ```torch.optim.AdamW``` could alleviate overfitting by implementing a weight decay parameter that penalises the magnitude of weights. 
+Reading pyTorch's documentation, we found that ```torch.optim.AdamW``` could alleviate overfitting by implementing a weight decay parameter that penalises the magnitude of weights. This restricts the weights from becoming too large. 
 
 Hyperparameters Learning Rate (LR) and Weight Decay (WD) of the AdamW optimiser was tuned separately for each classifier. This was done by changing the value of the hyperparameter while holding all other factors constant. The model was trained for 8 epochs and the last 4 values of each performance metric was averaged to obtain the final performance of the model for that hyperparameter value. 
+
+We evaluated the hyperparameters using conventional performance measures such as accuracy, loss, sensitivity, specificity and f1-score. Specifically, we prioritise the performance accuracy and sensitivity. This is captured in the pink graph "acc_sens", which is an aggregate of the two measures, further described in Section 2.4.1. 
+
+
 
 #### 2.3.1 Learning Rate (LR)
 | |Normal VS Infected|Covid VS Non-Covid|
@@ -210,13 +221,22 @@ The diagram below shows the performance of the ternary classifier on the validat
 
 ![](plots/val_three.png)
 
-### 3.2 Relative Difficulties of Binary Classification
+### 3.2 Evaluation of Results 
+
+#### 3.2.1 Relative Difficulties of Binary Classification
 
 We hypothesized that the infected/non-infected classification problem would be easier than the covid/non-covid classification problem, with the assumption that the difference between an infected and non-infected x-ray would be more significant than the difference between a covid and infected non-covid x-ray, which might require looking into finer details of the image.
 
 With reference to the table in 2.4.1, the infected/non-infected classifier exhibited a lower accuracy of 82% compared to the covid/non-covid classifier, which had an accuracy of 90%. This appears to contradict the hypothesis. However, the infected/non-infected classifier also has a higher sensitivity of 97%, compared to 92% for the covid/non-covid classifier.
 
 This may also be attributed to the relative imbalances in the dataset. While 73% of the dataset has the infected label, only 35% of the infected samples are covid cases. It may thus be more challenging for a model to identify positive covid cases correctly as compared to positive infected cases, since the dataset consists of a relatively smaller proportion of positive labels.
+
+#### 3.2.2 Typical examples of failures
+
+| Example                                    | Observations                                                 |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| ![](model_structures/normal_failure.png)   | The diagram shows a typical example of when the model predicts a "normal" sample as "infected/covid". This occurs when the radiograph is murkier overall, as compared the the correctly predicted sample. We also observe a higher "level" of white mass from the bottom on the wrongly predicted sample. |
+| ![](model_structures/infected_failure.png) | The diagram shows a typical example of when the model predicts an "infected/non-covid" sample as "infected/covid". We observe that the incorrectly labelled radiograph is clearer at the lungs area than the correctly predicted sample. We also observe a lower "level" of white mass from the bottom on the wrongly predicted sample. |
 
 
 
